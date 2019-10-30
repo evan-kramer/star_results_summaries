@@ -21,7 +21,16 @@ output: html_document
 This document summarizes the performance of `r sch`.
 
 ### STAR Score Changes
-`r sch`'s STAR score this year was `r round(star_scores$x2019_star_score[star_scores$school_name == sch], 2)`, __`r ifelse(star_scores$star_score_differences[star_scores$school_name == sch] > 0, "up ", "down ")` `r round(abs(star_scores$star_score_differences[star_scores$school_name == sch]), 2)` points__ from last year.
+```{r star_score_changes, include = F} 
+star_changes = transmute(
+  star_scores, 
+  school_name, 
+  pctile = round(100 * percent_rank(star_score_differences))
+)
+
+```
+
+`r sch`'s STAR score this year was `r round(star_scores$x2019_star_score[star_scores$school_name == sch], 2)`, __`r ifelse(star_scores$star_score_differences[star_scores$school_name == sch] > 0, "up ", "down ")` `r round(abs(star_scores$star_score_differences[star_scores$school_name == sch]), 2)` points__ from last year. For context, this `r ifelse(star_scores$star_score_differences[star_scores$school_name == sch] <= 0, "decrease", "increase")` was __larger than `r ifelse(star_changes$pctile[star_changes$school_name == sch] >= 50, star_changes$pctile[star_changes$school_name == sch], 100 - star_changes$pctile[star_changes$school_name == sch])` percent of schools__.
 
 ### Framework Score Changes
 ```{r framework, include = F}
@@ -49,7 +58,7 @@ framework_text = unique(
 )
 
 ```
-`r sch` has scores for `r framework_text`. The table below indicates the proportion of points possible the school earned this year compared to last year.
+`r sch` has scores for `r framework_text`. The table below indicates the proportion of points possible that the school earned this year compared to last year.
 
 ```{r framework_table, echo = F, warning = F, message = F}
 filter(framework_scores, school_name == sch) %>% 
@@ -66,9 +75,62 @@ filter(framework_scores, school_name == sch) %>%
 ```
 
 ### Student Group Score Changes
-- Number of student groups
-- Scores/points for each student group
-- Proportion of all students group that student group represents (would have to be at the metric level?)
-- 
+The table below shows how STAR scores changed for the the `r length(student_group_scores$student_group[student_group_scores$school_name == sch])` student groups that `r sch` serves.
+
+```{r student_group_table, echo = F, warning = F, message = F}
+  filter(student_group_scores, school_name == sch) %>% 
+    arrange(student_group_score_diff) %>%
+    transmute(
+      `School Name` = school_name, 
+      `Framework` = school_framework,
+      `Student Group` = student_group,
+      `Student Group Points (Current)` = round(x2019_student_group_points_earned, 2),
+      `Student Group Points (Prior)` = x2018_student_group_points_earned,
+      `Student Group Points Possible (Current)` = x2019_student_group_points_possible,
+      `Student Group Points Possible (Prior)` = x2018_student_group_points_possible
+    ) %>% 
+    left_join(
+      group_by(student_group_scores, student_group, school_framework) %>% 
+        summarize(`Student Group Points (Current State Average)` = round(mean(x2019_student_group_points_earned, na.rm = T), 2)),
+      by = c("Student Group" = "student_group", "Framework" = "school_framework")
+    ) %>% 
+    select(`School Name`, Framework, `Student Group`, 
+           starts_with("Student Group Points ("), everything()) %>% 
+    kable()
+```
 
 ### Metric Score Changes
+The table below summarizes which metrics contributed most toward `r sch`'s `r ifelse(star_scores$star_score_differences[star_scores$school_name == sch] > 0, "improvement", "decline")`.
+```{r metric_table_all, echo = F, warning = F, message = F}
+# Arrange differently depending on whether score went up or down? 
+if(star_scores$star_score_differences > 0) {
+  metric_scores_table = arrange(metric_scores, desc(metric_points_difference))
+} else {
+  metric_scores_table = arrange(metric_scores, metric_points_difference)
+}
+
+# All students
+filter(metric_scores_table, str_detect(student_group, "All"), 
+         school_name == sch) %>%
+  transmute(
+    `School Name` = school_name,
+    Framework = school_framework,
+    `Metric` = metric,
+    `Metric Points (Current)` = round(x2019_metric_points_earned, 2),
+    `Metric Points (Prior)` = x2018_metric_points_earned,
+    `Metric Points Possible (Current)` = x2019_metric_points_possible,
+    `Metric Points Possible (Prior)` = x2018_metric_points_possible
+  ) %>% 
+  left_join(
+    filter(metric_scores, student_group == "All Students") %>% 
+      group_by(metric, school_framework) %>% 
+      summarize(`Metric Points (Current State Average)` = round(mean(x2019_metric_points_earned, na.rm = T), 2)),
+    by = c("Metric" = "metric", "Framework" = "school_framework")
+  ) %>% 
+  select(`School Name`, Framework, Metric, 
+         starts_with("Metric Points ("), everything()) %>% 
+  kable()
+
+# Student group for which the score dropped most
+
+```
