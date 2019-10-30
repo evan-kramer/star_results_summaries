@@ -1,0 +1,30 @@
+```{r setup, include = F}
+options(java.parameters = "-Xmx16G")
+library(tidyverse)
+library(lubridate)
+library(haven)
+library(knitr)
+library(rmarkdown)
+
+
+```
+
+---
+title: "STAR Summary Report"
+author: "Office of Research, Analysis, and Reporting"
+date: `r str_c(month(now(), label = T), ". ", day(now()), ", ", year(now()))`
+output: html_document
+  params:
+    lea: `r sch`
+---
+
+### Overview
+This document summarizes the performance of `r sch`.
+
+### STAR Score Changes
+
+### Framework Score Changes
+
+### Student Group Score Changes
+
+### Metric Score Changes
