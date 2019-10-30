@@ -6,7 +6,6 @@ library(haven)
 library(knitr)
 library(rmarkdown)
 
-
 ```
 
 ---
@@ -22,9 +21,54 @@ output: html_document
 This document summarizes the performance of `r sch`.
 
 ### STAR Score Changes
+`r sch`'s STAR score this year was `r round(star_scores$x2019_star_score[star_scores$school_name == sch], 2)`, __`r ifelse(star_scores$star_score_differences[star_scores$school_name == sch] > 0, "up ", "down ")` `r round(abs(star_scores$star_score_differences[star_scores$school_name == sch]), 2)` points__ from last year.
 
 ### Framework Score Changes
+```{r framework, include = F}
+frameworks = framework_scores$school_framework[framework_scores$school_name == sch]
+
+framework_text = unique(
+  case_when(
+    length(frameworks) == 1 ~ str_c(
+        case_when(
+          str_detect(frameworks, "Alt") | 
+            str_detect(frameworks, "Elem") ~ "an ",
+          T ~ "a " 
+        ),
+        framework_scores$school_framework[framework_scores$school_name == sch],
+        " framework only"
+    ),
+    length(frameworks) == 2 ~ str_c(
+        "both ",
+        frameworks[1],
+        " and ",
+        frameworks[2],
+        " frameworks"
+    )
+  ) 
+)
+
+```
+`r sch` has scores for `r framework_text`. The table below indicates the proportion of points possible the school earned this year compared to last year.
+
+```{r framework_table, echo = F, warning = F, message = F}
+filter(framework_scores, school_name == sch) %>% 
+    transmute(
+      `School Name` = school_name,
+      `Framework` = school_framework,
+      `Framework Points (Current)` = round(x2019_framework_points_earned, 2),
+      `Framework Points (Prior)` = x2018_framework_points_earned,
+      `Framework Points Possible (Current)` = x2019_framework_points_possible,
+      `Framework Points Possible (Prior)` = x2018_framework_points_possible
+    ) %>% 
+  kable()
+
+```
 
 ### Student Group Score Changes
+- Number of student groups
+- Scores/points for each student group
+- Proportion of all students group that student group represents (would have to be at the metric level?)
+- 
 
 ### Metric Score Changes

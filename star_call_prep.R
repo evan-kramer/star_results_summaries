@@ -42,6 +42,44 @@ if(analysis) {
   # LEA and school name
   n_distinct(star_scores$lea_code, star_scores$school_code)
   n_distinct(star_scores$school_name)
+  
+  # STAR score change
+  
+  # Number of frameworks
+  frameworks = framework_scores$school_framework[framework_scores$school_name == sch]
+  unique(
+    case_when(
+      length(frameworks) == 1 ~ str_c(
+        case_when(
+          str_detect(frameworks, "Alt") | str_detect(frameworks, "Elem") ~ "an ",
+          T ~ "a " 
+        ),
+        framework_scores$school_framework[framework_scores$school_name == sch],
+        " framework only"
+      ),
+      length(frameworks) == 2 ~ str_c(
+        "both ",
+        frameworks[1],
+        " and ",
+        frameworks[2],
+        " frameworks"
+      )
+    ) 
+  )
+  
+  # Framework performance
+  filter(framework_scores, school_name == sch) %>% 
+    transmute(
+      `School Name` = school_name,
+      `Framework` = school_framework,
+      `Framework Points (Current)` = round(x2019_framework_points_earned, 2),
+      `Framework Points (Prior)` = x2018_framework_points_earned,
+      `Framework Points Possible (Current)` = x2019_framework_points_possible,
+      `Framework Points Possible (Prior)` = x2018_framework_points_possible
+    )
+  
+  # Student group performance
+  student_groups = student_group_scores$student_group[student_group_scores$school_name == sch]
 } else {
   rm(analysis)
 }
@@ -53,7 +91,7 @@ if(output) {
   } else {
     # Initiate loop for plots
     # for(sch in sort(unique(star_scores$school_name))) {
-    for(sch in sort(unique(star_scores$school_name))[1:10]) {
+    for(sch in sort(unique(star_scores$school_name))[1:3]) {
       # Reference RMD file
       rmarkdown::render("C:/Users/evan.kramer/Documents/star_results_summaries/knit_loop.Rmd",
                         output_file = str_c(sch, "_star_summary.html"),
