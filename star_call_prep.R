@@ -7,9 +7,10 @@ library(tidyverse)
 library(lubridate)
 library(haven)
 setwd("X:/Accountability/School Year 2019-20/06 Analysis/Year by Year Analysis/")
-data = T
-analysis = T
-output = T
+data = F
+analysis = F
+output = F
+compress = T
 
 # Data
 if(data) {
@@ -68,19 +69,22 @@ if(output) {
                         output_file = str_c(sch, " STAR Summary.html"),
                         output_dir = "C:/Users/evan.kramer/Downloads/star_summaries/")
     }
-    
-    # Zip files together
-    # Confirm that there are files to zip together
-    if(length(list.files("C:/Users/evan.kramer/Downloads/star_summaries")) > 0) {
-      zip(
-        zipfile = "C:/Users/evan.kramer/Downloads/STAR Summaries.zip",
-        files = list.files("C:/Users/evan.kramer/Downloads/star_summaries"),
-        flags = " a -tzip",
-        zip = "C:/Program Files/7-Zip/7Z" # Have to download 7-Zip program and point to it https://www.7-zip.org/download.html
-      )
-    }
   }
 } else {
   rm(output)
 }
 
+# Zip files together
+if(compress) {
+  # Confirm that there are files to zip together
+  if(length(list.files("C:/Users/evan.kramer/Downloads/star_summaries")) > 0) {
+    zip(
+      zipfile = "C:/Users/evan.kramer/Downloads/STAR Summaries.zip",
+      files = "C:/Users/evan.kramer/Downloads/star_summaries",
+      flags = " a -tzip",
+      zip = "C:/Program Files/7-Zip/7Z" # Have to download 7-Zip program and point to it https://www.7-zip.org/download.html
+    )
+  }  
+} else {
+  rm(compress)
+}
