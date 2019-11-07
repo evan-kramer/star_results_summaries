@@ -1,3 +1,11 @@
+---
+output: 
+  html_document:
+      toc: true
+      number_sections: false
+      toc_float: true
+---
+
 ```{r setup, include = F}
 options(java.parameters = "-Xmx16G")
 library(tidyverse)
@@ -12,9 +20,8 @@ library(rmarkdown)
 title: "STAR Summary Report"
 author: "Office of Research, Analysis, and Reporting"
 date: `r str_c(month(now(), label = T), ". ", day(now()), ", ", year(now()))`
-output: html_document
-  params:
-    lea: `r sch`
+params:
+  lea: `r sch`
 ---
 
 ### Overview

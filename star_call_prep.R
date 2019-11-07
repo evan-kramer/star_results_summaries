@@ -6,30 +6,31 @@ options(java.parameters = "-Xmx16G")
 library(tidyverse)
 library(lubridate)
 library(haven)
-setwd("C:/Users/evan.kramer/Downloads")
+setwd("X:/Accountability/School Year 2019-20/06 Analysis/Year by Year Analysis/")
 data = T
-analysis = F
+analysis = T
 output = T
 
 # Data
 if(data) {
+  file = "Year over Year STAR Data for Analysis_v6.xlsx"
   star_scores = readxl::read_excel(
-    "Year over Year STAR Data for Analysis_v2 10.24.xlsx",
+    file,
     sheet = "STAR Scores"
   ) %>% 
     janitor::clean_names()
   framework_scores = readxl::read_excel(
-    "Year over Year STAR Data for Analysis_v2 10.24.xlsx",
+    file,
     sheet = "STAR Framework Scores"
   ) %>% 
     janitor::clean_names()
   student_group_scores = readxl::read_excel(
-    "Year over Year STAR Data for Analysis_v2 10.24.xlsx",
+    file,
     sheet = "STAR Student Group Scores"
   ) %>% 
     janitor::clean_names()
   metric_scores = readxl::read_excel(
-    "Year over Year STAR Data for Analysis_v2 10.24.xlsx",
+    file,
     sheet = "STAR Metric Scores"
   ) %>% 
     janitor::clean_names()
@@ -44,6 +45,11 @@ if(analysis) {
   }
   
   # Sandbox
+  # Framework changes for specific group
+  # Highlight just the metrics with the largest changes
+  # Indicate whether they switched from attendance growth to 90% attendance
+  # Add a metric score column
+  # Separate multiple frameworks by section and highlight if framework weight changed
 } else { 
   rm(analysis)
 }
@@ -54,12 +60,24 @@ if(output) {
     print("You sure you have the data for this?")
   } else {
     # Initiate loop for plots
-    # for(sch in sort(unique(star_scores$school_name))) {
-    for(sch in sort(unique(star_scores$school_name))[1:3]) {
+    for(sch in sort(unique(star_scores$school_name))) {
+    # for(sch in sort(unique(star_scores$school_name))[1:3]) {
       # Reference RMD file
       rmarkdown::render("C:/Users/evan.kramer/Documents/star_results_summaries/knit_loop.Rmd",
-                        output_file = str_c(sch, "_star_summary.html"),
-                        output_dir = "C:/Users/evan.kramer/Downloads")
+                        output_format = "html_document",
+                        output_file = str_c(sch, " STAR Summary.html"),
+                        output_dir = "C:/Users/evan.kramer/Downloads/star_summaries/")
+    }
+    
+    # Zip files together
+    # Confirm that there are files to zip together
+    if(length(list.files("C:/Users/evan.kramer/Downloads/star_summaries")) > 0) {
+      zip(
+        zipfile = "C:/Users/evan.kramer/Downloads/STAR Summaries.zip",
+        files = list.files("C:/Users/evan.kramer/Downloads/star_summaries"),
+        flags = " a -tzip",
+        zip = "C:/Program Files/7-Zip/7Z" # Have to download 7-Zip program and point to it https://www.7-zip.org/download.html
+      )
     }
   }
 } else {
