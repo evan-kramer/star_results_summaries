@@ -107,7 +107,7 @@ The table below shows how STAR scores changed for the the `r length(student_grou
 ```
 
 ### Metric Score Changes
-The table below summarizes which metrics for the All Students group contributed most toward `r sch`'s `r ifelse(star_scores$star_score_differences[star_scores$school_name == sch] > 0, "improvement", "decline")`.
+The table below summarizes which metrics for the All Students group contributed most toward `r sch`'s change.
 ```{r metric_table_all, echo = F, warning = F, message = F}
 # Arrange differently depending on whether score went up or down? 
 if(star_scores$star_score_differences > 0) {
