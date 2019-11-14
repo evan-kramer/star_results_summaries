@@ -1,9 +1,8 @@
 ---
-output: 
-  html_document:
-      toc: true
-      number_sections: false
-      toc_float: true
+output: pdf_document
+title: "STAR Summary Report"
+author: "Office of Research, Analysis, and Reporting"
+
 ---
 
 ```{r setup, include = F}
@@ -17,9 +16,6 @@ library(rmarkdown)
 ```
 
 ---
-title: "STAR Summary Report"
-author: "Office of Research, Analysis, and Reporting"
-date: `r str_c(month(now(), label = T), ". ", day(now()), ", ", year(now()))`
 params:
   lea: `r sch`
 ---

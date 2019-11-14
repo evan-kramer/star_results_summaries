@@ -6,11 +6,14 @@ options(java.parameters = "-Xmx16G")
 library(tidyverse)
 library(lubridate)
 library(haven)
+library(knitr)
+library(rmarkdown)
 setwd("X:/Accountability/School Year 2019-20/06 Analysis/Year by Year Analysis/")
-data = F
+data = T
 analysis = F
-output = F
-compress = T
+output = T
+compress = F
+to_pdf = F
 
 # Data
 if(data) {
@@ -46,6 +49,35 @@ if(analysis) {
   }
   
   # Sandbox
+  if(star_scores$star_score_differences > 0) {
+    metric_scores_table = arrange(metric_scores, metric_points_difference)
+  } else {
+    metric_scores_table = arrange(metric_scores, desc(metric_points_difference))
+  }
+  
+  # All students
+  filter(metric_scores_table, str_detect(student_group, "All"), 
+         school_name == sch) %>%
+    transmute(
+      `School Name` = school_name,
+      Framework = school_framework,
+      `Metric` = metric,
+      `Metric Points (Current)` = round(x2019_metric_points_earned, 2),
+      `Metric Points (Prior)` = x2018_metric_points_earned,
+      `Metric Points Possible (Current)` = x2019_metric_points_possible,
+      `Metric Points Possible (Prior)` = x2018_metric_points_possible
+    ) %>% 
+    left_join(
+      filter(metric_scores, student_group == "All Students") %>% 
+        group_by(metric, school_framework) %>% 
+        summarize(`Metric Points (Current State Average)` = round(mean(x2019_metric_points_earned, na.rm = T), 2)),
+      by = c("Metric" = "metric", "Framework" = "school_framework")
+    ) %>% 
+    select(`School Name`, Framework, Metric, 
+           starts_with("Metric Points ("), everything()) %>% 
+    print()
+  
+  
   # Framework changes for specific group
   # Highlight just the metrics with the largest changes
   # Indicate whether they switched from attendance growth to 90% attendance
@@ -62,7 +94,7 @@ if(output) {
   } else {
     # Initiate loop for plots
     for(sch in sort(unique(star_scores$school_name))) {
-    # for(sch in sort(unique(star_scores$school_name))[1:3]) {
+      # for(sch in sort(unique(star_scores$school_name))[1:3]) {
       # Reference RMD file
       rmarkdown::render("C:/Users/evan.kramer/Documents/star_results_summaries/knit_loop.Rmd",
                         output_format = "html_document",
@@ -82,9 +114,23 @@ if(compress) {
       zipfile = "C:/Users/evan.kramer/Downloads/STAR Summaries.zip",
       files = "C:/Users/evan.kramer/Downloads/star_summaries",
       flags = " a -tzip",
-      zip = "C:/Program Files/7-Zip/7Z" # Have to download 7-Zip program and point to it https://www.7-zip.org/download.html
+      zip = "C:/Program Files/7-Zip/7Z" #Have to download 7-Zip program and point to it https://www.7-zip.org/download.html
     )
   }  
 } else {
   rm(compress)
+}
+
+# Convert to pdf
+if(to_pdf) {
+  for(f in list.files("C:/Users/evan.kramer/Downloads/star_summaries")) {
+    if(str_detect(f, ".html")) {
+      pandoc_convert(
+        input = str_c("C:/Users/evan.kramer/Downloads/star_summaries/", f),
+        output = str_c("C:/Users/evan.kramer/Downloads/star_summaries/PDF/", str_replace_all(f, ".html", ".pdf"))
+      )
+    }
+  }
+} else {
+  rm(to_pdf)
 }
