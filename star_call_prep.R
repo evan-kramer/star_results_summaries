@@ -8,12 +8,13 @@ library(lubridate)
 library(haven)
 library(knitr)
 library(rmarkdown)
+library(kableExtra)
 setwd("X:/Accountability/School Year 2019-20/06 Analysis/Year by Year Analysis/")
-data = T
+data = F
 analysis = F
-output = T
+output = F
 compress = F
-to_pdf = F
+to_pdf = T
 
 # Data
 if(data) {
@@ -93,8 +94,8 @@ if(output) {
     print("You sure you have the data for this?")
   } else {
     # Initiate loop for plots
-    for(sch in sort(unique(star_scores$school_name))) {
-      # for(sch in sort(unique(star_scores$school_name))[1:3]) {
+    # for(sch in sort(unique(star_scores$school_name))) {
+    for(sch in sort(unique(star_scores$school_name))[1:3]) {
       # Reference RMD file
       rmarkdown::render("C:/Users/evan.kramer/Documents/star_results_summaries/knit_loop.Rmd",
                         output_format = "html_document",
@@ -121,14 +122,33 @@ if(compress) {
   rm(compress)
 }
 
-# Convert to pdf
+# Output to pdf
 if(to_pdf) {
-  for(f in list.files("C:/Users/evan.kramer/Downloads/star_summaries")) {
-    if(str_detect(f, ".html")) {
-      pandoc_convert(
-        input = str_c("C:/Users/evan.kramer/Downloads/star_summaries/", f),
-        output = str_c("C:/Users/evan.kramer/Downloads/star_summaries/PDF/", str_replace_all(f, ".html", ".pdf"))
-      )
+  if(!"star_scores" %in% ls()) {
+    print("You sure you have the data for this?")
+  } else {
+    # Initiate loop for plots
+    # for(sch in sort(unique(star_scores$school_name))) {
+    (school_list = bind_rows(
+      filter(star_scores, str_detect(school_name, "KIPP") & str_detect(school_name, "Promise")),
+      filter(star_scores, str_detect(school_name, "Kimball") & str_detect(school_name, "Elem")),
+      filter(star_scores, str_detect(school_name, "Payne") & str_detect(school_name, "Elem")),
+      filter(star_scores, str_detect(school_name, "DC Prep") & str_detect(school_name, "Edgewood Middle")),
+      filter(star_scores, str_detect(school_name, "Columbia Heights") & str_detect(school_name, "Educ")),
+      filter(star_scores, str_detect(school_name, "Truesdell") & str_detect(school_name, "Educ")),
+      filter(star_scores, str_detect(school_name, "Phelps") & str_detect(school_name, "Architecture")),
+      filter(star_scores, str_detect(school_name, "DC") & str_detect(school_name, "Scholars")),
+      filter(star_scores, str_detect(school_name, "Richard Wright") & str_detect(school_name, "Journalism"))
+    ))
+    if(nrow(school_list) == 9) {
+      for(sch in school_list$school_name) {
+        rmarkdown::render("C:/Users/evan.kramer/Documents/star_results_summaries/knit_loop_pdf.Rmd",
+                          output_format = "pdf_document",
+                          output_file = str_c(sch, " STAR Summary.pdf"),
+                          output_dir = "C:/Users/evan.kramer/Downloads/star_summaries/PDF/")
+      }
+    } else {
+      print("Wrong number of schools in list")
     }
   }
 } else {
